@@ -1,25 +1,23 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+import MiniDrawer from "./components/Navbar.jsx";
+import Login from "./components/Auth.jsx";
+import { useState } from "react";
+import "@fontsource/roboto";
+import { ThemeProvider } from "@emotion/react";
+import LightTheme from "./Themes/LightTheme.js";
+import DarkTheme from "./Themes/DarkTheme.js";
+import useLocalStorage from "./Hooks/useLocalStorage.js";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  const [auth, setAuth] = useLocalStorage("auth", {
+    dp: [{ label: "" }],
+    user: "",
+    password: "",
+  });
+  const [theme, setTheme] = useLocalStorage("theme", "light");
+  return <Login />;
+  // {auth.user === "" ?
+  // : <MiniDrawer/>}
 }
 
 export default App;
