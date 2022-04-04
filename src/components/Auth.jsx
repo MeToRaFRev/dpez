@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React,{useState} from 'react';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
@@ -9,8 +9,11 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Autocomplete from '@mui/material/Autocomplete';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { useState } from 'react';
+import {grabLocalStorage, useLocalStorage } from "../Hooks/useLocalStorage.js";
+import axios from 'axios';
+import Darkmode from './Darkmode.jsx';
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 
 function Copyright(props) {
   return (
@@ -25,7 +28,27 @@ function Copyright(props) {
   );
 }
 
+
+const handleLogin = (login,setLogin) => {
+  if(login.save === true){
+    localStorage.setItem('login',JSON.stringify(login));
+  }
+  const token = btoa(login.username+":"+login.password)
+  axios.get('http://'+login.datapower+'/Tools/rest-cors/mgmt/actionqueue/default',
+  {headers: {
+    'Access-Control-Allow-Credentials': true,
+    'Authorization': `Basic ${token}` }
+  }
+  ).then(res => {
+    console.log(res.data)
+    setLogin(...login,...{authenticated:true})
+  }).catch(err => {
+    console.log(err)
+  })
+}
+
 export default function Auth() {
+  const [login, setLogin] = useLocalStorage( 'login',{datapower:"",username:"",password:"",save:false,authenticated:false} );
   return (
       <Container component="main" maxWidth="xs">
         <CssBaseline />
@@ -41,12 +64,17 @@ export default function Auth() {
             Sign in
           </Typography>
           <Box component="form" noValidate sx={{ mt: 1 }}>
-          <Autocomplete
-            disablePortal
-            id="combo-box-demo"
-            // options={top100Films}
-            fullWidth
-            renderInput={(params) => <TextField {...params} label="Datapower" />}
+          <TextField
+              margin="normal"
+              required
+              fullWidth
+              label="Datapower"
+              name="Datapower"
+              autoFocus
+              onChange={(e) => {
+                login.datapower = e.target.value;
+              }}
+              defaultValue={grabLocalStorage(login)?.datapower === "" ? grabLocalStorage(login)?.datapower : login.datapower}
             />
             <TextField
               margin="normal"
@@ -55,6 +83,10 @@ export default function Auth() {
               label="Username"
               name="Username"
               autoFocus
+              onChange={(e) => {
+                login.username = e.target.value;
+              }}
+              defaultValue={login.username}
             />
             <TextField
               margin="normal"
@@ -64,16 +96,26 @@ export default function Auth() {
               label="Password"
               type="password"
               id="password"
+              onChange={(e) => {
+                login.password = e.target.value;
+              }}
+              defaultValue={login.password}
             />
             <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
+              control={<Checkbox value="remember" color="primary" 
+              checked={login.save}
+              onChange={(e) => {
+                setLogin({...login,save:e.target.checked})
+
+              }}
+              />}
               label="Remember me"
             />
             <Button
-              type="submit"
               fullWidth
               variant="contained"
               sx={{ mt: 1, mb: 2 }}
+              onClick={()=>{handleLogin(login,setLogin)}}
             >
               Sign In
             </Button>

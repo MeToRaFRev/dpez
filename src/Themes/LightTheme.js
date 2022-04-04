@@ -1,6 +1,9 @@
 const lightTheme = {
   palette: {
-    type: "light",
+    mode: "light",
+    opposite: {
+      main: "#121212",
+    },
   },
 };
 

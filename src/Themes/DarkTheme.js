@@ -1,6 +1,9 @@
 const darkTheme = {
   palette: {
-    type: "dark",
+    mode: "dark",
+    opposite: {
+      main: "#ffffff",
+    },
   },
 };
 
