@@ -1,36 +1,83 @@
-import React from 'react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { Doughnut } from 'react-chartjs-2';
+import React,{useEffect,useState} from 'react';
+import axios from 'axios'
+import Paper from '@mui/material/Paper';
+import Grid from '@mui/material/Grid';
+import SystemInfoUI from './SystemInfoUI.jsx';
+import Button from '@mui/material/Button'
+import { CssBaseline } from '@mui/material';
 
-ChartJS.register(ArcElement, Tooltip, Legend);
 
-export const data = {
-  labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-  datasets: [
-    {
-      label: '# of Votes',
-      data: [12, 19, 3, 5, 2, 3],
-      backgroundColor: [
-        'rgba(255, 99, 132, 0.2)',
-        'rgba(54, 162, 235, 0.2)',
-        'rgba(255, 206, 86, 0.2)',
-        'rgba(75, 192, 192, 0.2)',
-        'rgba(153, 102, 255, 0.2)',
-        'rgba(255, 159, 64, 0.2)',
-      ],
-      borderColor: [
-        'rgba(255, 99, 132, 1)',
-        'rgba(54, 162, 235, 1)',
-        'rgba(255, 206, 86, 1)',
-        'rgba(75, 192, 192, 1)',
-        'rgba(153, 102, 255, 1)',
-        'rgba(255, 159, 64, 1)',
-      ],
-      borderWidth: 1,
-    },
-  ],
-};
 
-export default function HomePage() {
-  return <Doughnut data={data} />;
-}
+
+export default function Homepage(props) {
+
+  const [systemInfo, setSystemInfo] = useState({
+    CPUStatus: 'loading',
+    MemoryStatus: 'loading',
+    FilesystemStatus: 'loading',
+  })
+
+  const {preferences} = props;
+  const token = btoa(`${preferences.username}:${preferences.password}`);
+  const headers = {headers: {'Authorization': `Basic ${token}`}}
+  
+  const handleSystemInfo = async () => {
+    try {
+      let cpuStats, memoryStats, filesystemStats;
+      const cpuResponse = await axios.get(`http://${preferences.datapower}/Tools/rest-cors/mgmt/status/default/CPUUsage`, headers)
+      if (cpuResponse.data.CPUUsage) {
+        cpuStats = cpuResponse.data.CPUUsage.tenSeconds
+      } else {
+        cpuStats = 'loading'
+        console.log('CPU stats not available')
+      }
+      
+      const memoryResponse = await axios.get(`http://${preferences.datapower}/Tools/rest-cors/mgmt/status/default/MemoryStatus`, headers)
+      if (memoryResponse.data.MemoryStatus) {
+        memoryStats = (parseInt(memoryResponse.data.MemoryStatus.UsedMemory) / parseInt(memoryResponse.data.MemoryStatus.TotalMemory)) * 100
+      } else {
+        memoryStats = 'loading'
+        console.log('Memory stats not available')
+      }
+
+      const filesystemResponse = await axios.get(`http://${preferences.datapower}/Tools/rest-cors/mgmt/status/default/FilesystemStatus`, headers)
+      if (filesystemResponse.data.FilesystemStatus) {
+        filesystemStats = 100 - parseInt(filesystemResponse.data.FilesystemStatus.FreeEncrypted) / parseInt(filesystemResponse.data.FilesystemStatus.TotalEncrypted) * 100
+      } else {
+        filesystemStats = 'loading'
+        console.log('Filesystem stats not available')
+      }
+
+      setSystemInfo({
+        CPUStatus: cpuStats,
+        MemoryStatus: memoryStats,
+        FilesystemStatus: filesystemStats,
+      })
+
+    } catch (error) {
+      console.log(error.msg)
+    }
+  }
+
+
+useEffect(() => {
+  handleSystemInfo();
+
+  // setTimeout(() => {
+  //   setInterval( handleSystemInfo, 5000);
+  // }, 5000);
+}, []);
+
+  return (
+    <React.Fragment>
+      <CssBaseline/>
+      <Paper sx={{display: 'flex', padding: '0rem 1rem', justifyContent: 'space-evenly'}}>
+        <SystemInfoUI system="CPU" progress={systemInfo.CPUStatus}/>
+        <SystemInfoUI system="Memory" progress={systemInfo.MemoryStatus}/>
+        <SystemInfoUI system="Filesystem" progress={systemInfo.FilesystemStatus}/>
+        <Button sx={{
+          display:'absolute',
+          right: '0',
+          }}>test</Button>
+      </Paper>
+    </React.Fragment>)}

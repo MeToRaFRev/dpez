@@ -1,4 +1,4 @@
-import React,{useState} from 'react';
+import React from 'react';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
@@ -8,11 +8,8 @@ import Link from '@mui/material/Link';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import Autocomplete from '@mui/material/Autocomplete';
 import {grabLocalStorage, useLocalStorage } from "../Hooks/useLocalStorage.js";
 import axios from 'axios';
-import Darkmode from './Darkmode.jsx';
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 
 function Copyright(props) {
@@ -29,26 +26,28 @@ function Copyright(props) {
 }
 
 
-const handleLogin = (login,setLogin) => {
-  if(login.save === true){
-    localStorage.setItem('login',JSON.stringify(login));
+const handleLogin = (preferences,setAuth) => {
+  if(preferences.save === true){
+    localStorage.setItem('preferences',JSON.stringify(preferences));
   }
-  const token = btoa(login.username+":"+login.password)
-  axios.get('http://'+login.datapower+'/Tools/rest-cors/mgmt/actionqueue/default',
+  const token = btoa(preferences.username+":"+preferences.password)
+  axios.get('http://'+preferences.datapower+'/Tools/rest-cors/mgmt/actionqueue/default',
   {headers: {
-    'Access-Control-Allow-Credentials': true,
-    'Authorization': `Basic ${token}` }
+    'Authorization': `Basic ${token}`}
   }
-  ).then(res => {
-    console.log(res.data)
-    setLogin(...login,...{authenticated:true})
-  }).catch(err => {
-    console.log(err)
-  })
-}
+  ).then(() => 
+    {
+      setAuth(true);
+    }
+  ).catch(
+    () => {
+      setAuth(false)
+      console.log("Login Failed");
+    }
+  )}
 
-export default function Auth() {
-  const [login, setLogin] = useLocalStorage( 'login',{datapower:"",username:"",password:"",save:false,authenticated:false} );
+export default function Login(props) {
+  const { preferences,setPreferences,setAuth } = props;
   return (
       <Container component="main" maxWidth="xs">
         <CssBaseline />
@@ -72,9 +71,9 @@ export default function Auth() {
               name="Datapower"
               autoFocus
               onChange={(e) => {
-                login.datapower = e.target.value;
+                preferences.datapower = e.target.value;
               }}
-              defaultValue={grabLocalStorage(login)?.datapower === "" ? grabLocalStorage(login)?.datapower : login.datapower}
+              defaultValue={preferences.datapower}
             />
             <TextField
               margin="normal"
@@ -84,9 +83,9 @@ export default function Auth() {
               name="Username"
               autoFocus
               onChange={(e) => {
-                login.username = e.target.value;
+                preferences.username = e.target.value;
               }}
-              defaultValue={login.username}
+              defaultValue={preferences.username}
             />
             <TextField
               margin="normal"
@@ -97,16 +96,15 @@ export default function Auth() {
               type="password"
               id="password"
               onChange={(e) => {
-                login.password = e.target.value;
+                preferences.password = e.target.value;
               }}
-              defaultValue={login.password}
+              defaultValue={preferences.password}
             />
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" 
-              checked={login.save}
+              checked={preferences.save}
               onChange={(e) => {
-                setLogin({...login,save:e.target.checked})
-
+                setPreferences({...preferences,save:e.target.checked})
               }}
               />}
               label="Remember me"
@@ -115,7 +113,7 @@ export default function Auth() {
               fullWidth
               variant="contained"
               sx={{ mt: 1, mb: 2 }}
-              onClick={()=>{handleLogin(login,setLogin)}}
+              onClick={()=>{handleLogin(preferences,setAuth)}}
             >
               Sign In
             </Button>

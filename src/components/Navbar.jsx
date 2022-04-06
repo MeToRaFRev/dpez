@@ -24,6 +24,7 @@ import DisabledByDefaultRoundedIcon from '@mui/icons-material/DisabledByDefaultR
 import SettingsSuggestRoundedIcon from '@mui/icons-material/SettingsSuggestRounded';
 import PestControlRoundedIcon from '@mui/icons-material/PestControlRounded';
 import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
+import LogoutIcon from '@mui/icons-material/Logout';
 import HomePage from './HomePage.jsx'
 import MPGW from './MPGW.jsx';
 import WSP from './WSP.jsx';
@@ -103,7 +104,8 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-export default function MiniDrawer() {
+export default function MiniDrawer(props) {
+  const {preferences,setAuth} = props;
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
   const [shownPage,setShownPage] = React.useState('home');
@@ -143,7 +145,7 @@ const handleControlClick = () => {
     }
 
 const navbarClick = (page) =>{
-    console.log(page+" Clicked");
+    // console.log(page+" Clicked");
     switch(page) {
         case 'mpgw':
             return <MPGW />
@@ -154,7 +156,7 @@ const navbarClick = (page) =>{
         case 'network':
             return <Network />
         case 'home':
-            return <HomePage />
+            return <HomePage preferences={preferences}/>
         case 'settings':
             return <Settings />
         case 'troubleshoot':
@@ -162,14 +164,14 @@ const navbarClick = (page) =>{
         case 'control':
             return <Control />
         default:
-            return <HomePage />
+            return <HomePage preferences={preferences}/>
     }
 
     }
 
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', }}>
       <AppBar position="fixed" open={open}>
         <Toolbar>
           <IconButton
@@ -184,10 +186,12 @@ const navbarClick = (page) =>{
           >
             <MenuIcon />
           </IconButton>
-          <Button variant="text" sx={{color:"white",fontSize:"17px"}} onClick={()=>handleHomeClick()}>
+          <Button variant="text" sx={{color:"white",fontSize:"20px"}} onClick={()=>handleHomeClick()}>
             Datapower Easy Tool
           </Button>
-          <Darkmode/>
+          <Button sx={{
+            marginLeft: 'auto',
+          }} onClick={()=>{setAuth(false)}}><LogoutIcon sx={{color:"white"}}/></Button>
         </Toolbar>
       </AppBar>
       <Drawer variant="permanent" open={open}>
@@ -254,7 +258,7 @@ const navbarClick = (page) =>{
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
             {
-                navbarClick(shownPage)
+                navbarClick(shownPage,preferences)
             }
       </Box>
     </Box>
